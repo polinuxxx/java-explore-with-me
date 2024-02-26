@@ -1,15 +1,55 @@
 version: '3.1'
 services:
   stats-server:
+    build:
+      context: ./stat-service/stat-server
+    image: stat-server
+    container_name: explore-with-me-stat
     ports:
       - "9090:9090"
+    depends_on:
+      - stats-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/stats
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+#      - TZ=Europe/Moscow
 
   stats-db:
     image: postgres:14-alpine
-
-  ewm-service:
+    container_name: stats-database
     ports:
-      - "8080:8080"
+      - "6542:5432"
+    volumes:
+      - /var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=stats
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
 
-  ewm-db:
-    image: postgres:14-alpine
+#  ewm-service:
+#    build:
+#      context: ./event-service
+#    image: explore-with-me-event
+#    container_name: explore-with-me-event
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - ewm-db
+#    environment:
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/events
+#      - SPRING_DATASOURCE_USERNAME=root
+#      - SPRING_DATASOURCE_PASSWORD=root
+#    #      - TZ=Europe/Moscow
+#
+#  ewm-db:
+#    image: postgres:14-alpine
+#    container_name: ewm-database
+#    ports:
+#      - "6541:5432"
+#    volumes:
+#      - /var/lib/postgresql/data/
+#    environment:
+#      - POSTGRES_DB=events
+#      - POSTGRES_USER=root
+#      - POSTGRES_PASSWORD=root
