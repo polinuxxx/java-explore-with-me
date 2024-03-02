@@ -1,6 +1,7 @@
 package ru.practicum.service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import ru.practicum.model.Hit;
 import ru.practicum.model.StatProjection;
@@ -11,5 +12,5 @@ import ru.practicum.model.StatProjection;
 public interface HitService {
     Hit create(Hit hit);
 
-    List<StatProjection> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
+    List<StatProjection> getStats(LocalDateTime start, LocalDateTime end, Collection<String> uris, Boolean unique);
 }

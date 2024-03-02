@@ -1,6 +1,7 @@
 package ru.practicum.controller;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class StatsController {
     @GetMapping("/stats")
     public List<StatView> getStats(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-                                   @RequestParam(required = false) List<String> uris,
+                                   @RequestParam(required = false) Collection<String> uris,
                                    @RequestParam(defaultValue = "false") Boolean unique) {
         return hitConverter.convert(hitService.getStats(start, end, uris, unique));
     }

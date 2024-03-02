@@ -2,6 +2,7 @@ package ru.practicum;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class StatClient {
     private final RestTemplate rest;
 
     @Autowired
-    public StatClient(@Value("http://localhost:9090") String serverUrl, RestTemplateBuilder builder) {
+    public StatClient(@Value("${stat-server.url}") String serverUrl, RestTemplateBuilder builder) {
         this.rest = builder
                 .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
@@ -58,7 +59,7 @@ public class StatClient {
         return responseEntity.getBody();
     }
 
-    public List<StatView> getStats(LocalDateTime start, LocalDateTime end, @Nullable List<String> uris,
+    public List<StatView> getStats(LocalDateTime start, LocalDateTime end, @Nullable Collection<String> uris,
                                    @Nullable Boolean unique) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         Map<String, Object> parameters = new HashMap<>();
@@ -69,11 +70,11 @@ public class StatClient {
         path.append("/stats?start={start}&end={end}");
 
         if (uris != null && !uris.isEmpty()) {
-            parameters.put("uris", uris);
+            parameters.put("uris", uris.toArray());
             path.append("&uris={uris}");
         }
         if (unique != null) {
-            parameters.put("unique", unique);
+            parameters.put("unique", unique.toString());
             path.append("&unique={unique}");
         }
 

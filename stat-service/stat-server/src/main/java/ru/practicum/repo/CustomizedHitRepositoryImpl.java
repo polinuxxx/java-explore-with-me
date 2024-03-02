@@ -2,6 +2,7 @@ package ru.practicum.repo;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.persistence.EntityManager;
 import com.querydsl.core.types.Projections;
@@ -32,7 +33,8 @@ public class CustomizedHitRepositoryImpl implements CustomizedHitRepository {
     }
 
     @Override
-    public List<StatProjection> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    public List<StatProjection> getStats(LocalDateTime start, LocalDateTime end, Collection<String> uris,
+                                         Boolean unique) {
         QHit qHit = QHit.hit;
 
         List<BooleanExpression> conditions = new ArrayList<>();
