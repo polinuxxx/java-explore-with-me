@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+/**
+ * Проекция для получения {@link Hit}.
+ */
 @Getter
 @Setter
 @Builder
