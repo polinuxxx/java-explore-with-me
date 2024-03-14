@@ -1201,7 +1201,7 @@
 							"});\r",
 							"\r",
 							"const target = pm.response.json();\r",
-							"const source = pm.collectionVariables.get('source');\r",
+							"const source = pm.collectionVariables.get('source_collection');\r",
 							"\r",
 							"pm.test(\"Значение from по-умолчанию должно быть равным 0\", function () {\r",
 							"    pm.expect(target[0].id).to.be.equal(source[0].id, 'Запросы с from=0 и без него должны начинаться с одного и того же события');\r",
@@ -1231,7 +1231,7 @@
 							"            url : \"http://localhost:8080/admin/locations\",\r",
 							"            method : \"GET\",\r",
 							"            header: { \"Content-Type\": \"application/json\" }\r",
-							"        }, (error, response) => {pm.collectionVariables.set('source', response.json())});\r",
+							"        }, (error, response) => {pm.collectionVariables.set('source_collection', response.json())});\r",
 							"    } catch(err) {\r",
 							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
 							"    }\r",
@@ -1954,11 +1954,17 @@
 			"type": "string"
 		},
 		{
-			"key": "source",
-			"value": ""
+			"key": "request_body",
+			"value": "",
+			"type": "string"
 		},
 		{
-			"key": "request_body",
+			"key": "source",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "source_collection",
 			"value": "",
 			"type": "string"
 		}
