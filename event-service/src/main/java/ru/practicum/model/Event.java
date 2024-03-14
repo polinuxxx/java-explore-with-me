@@ -1,12 +1,8 @@
 package ru.practicum.model;
 
-import java.awt.geom.Point2D;
 import java.time.LocalDateTime;
 import java.util.Set;
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -22,6 +18,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.geolatte.geom.G2D;
+import org.geolatte.geom.Point;
 
 /**
  * Событие.
@@ -63,12 +61,7 @@ public class Event extends AbstractEntity {
     @Column(name = "creation_date")
     LocalDateTime creationDate;
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "x", column = @Column(name = "latitude")),
-            @AttributeOverride(name = "y", column = @Column(name = "longitude"))
-    })
-    Point2D.Double location;
+    Point<G2D> location;
 
     @Column(name = "publication_date")
     LocalDateTime publicationDate;

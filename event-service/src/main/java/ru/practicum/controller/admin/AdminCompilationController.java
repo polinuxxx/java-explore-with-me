@@ -1,6 +1,9 @@
 package ru.practicum.controller.admin;
 
 import javax.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +27,7 @@ import ru.practicum.service.compilation.CompilationService;
 @RestController
 @RequestMapping("/admin/compilations")
 @RequiredArgsConstructor
+@Tag(name = "Admin: Подборки событий", description = "API для работы с подборками событий")
 public class AdminCompilationController {
     private final CompilationService compilationService;
 
@@ -31,18 +35,24 @@ public class AdminCompilationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Создание новой подборки событий")
     public CompilationView create(@RequestBody @Valid CompilationCreateRequest request) {
         return compilationConverter.convert(compilationService.create(compilationConverter.convert(request)));
     }
 
     @PatchMapping("/{compId}")
-    public CompilationView patch(@PathVariable Long compId, @RequestBody @Valid CompilationPatchRequest request) {
+    @Operation(summary = "Редактирование подборки событий")
+    public CompilationView patch(
+            @PathVariable @Parameter(description = "Идентификатор подборки событий", required = true) Long compId,
+            @RequestBody @Valid CompilationPatchRequest request) {
         return compilationConverter.convert(compilationService.patch(compId, compilationConverter.convert(request)));
     }
 
     @DeleteMapping("/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long compId) {
+    @Operation(summary = "Удаление подборки событий")
+    public void delete(
+            @PathVariable @Parameter(description = "Идентификатор подборки событий", required = true) Long compId) {
         compilationService.delete(compId);
     }
 }

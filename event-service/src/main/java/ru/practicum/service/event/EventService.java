@@ -24,7 +24,8 @@ public interface EventService {
 
     List<EventShortProjection> getAllPublic(String text, List<Long> categories, Boolean paid,
                                             LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                            Boolean onlyAvailable, SortVariant sort, Integer from, Integer size);
+                                            Boolean onlyAvailable, SortVariant sort, Integer from, Integer size,
+                                            List<Long> locationIds, List<String> areas);
 
     EventFullProjection getById(Long id);
 

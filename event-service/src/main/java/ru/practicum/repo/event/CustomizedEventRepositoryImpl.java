@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.QBean;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -12,6 +14,10 @@ import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.geolatte.geom.G2D;
+import org.geolatte.geom.MultiPolygon;
+import org.geolatte.geom.Polygon;
+import org.geolatte.geom.codec.Wkt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaContext;
@@ -22,10 +28,13 @@ import ru.practicum.model.EventStatus;
 import ru.practicum.model.QCategory;
 import ru.practicum.model.QEvent;
 import ru.practicum.model.QEventRequest;
+import ru.practicum.model.QLocation;
 import ru.practicum.model.QUser;
 import ru.practicum.model.SortVariant;
 import ru.practicum.model.projection.EventFullProjection;
 import ru.practicum.model.projection.EventShortProjection;
+
+import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 
 /**
  * Реализация репозитория для запросов по событиям с QueryDSL.
@@ -41,19 +50,23 @@ public class CustomizedEventRepositoryImpl implements CustomizedEventRepository 
     }
 
     @Override
-    public <T extends EventShortProjection> List<T> findAll(List<Long> users, List<EventStatus> states,
-                                              String text, List<Long> categories, Boolean paid,
-                                              LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                              Boolean onlyAvailable, SortVariant sort, Pageable pageable,
-                                              Boolean detailed) {
+    public <T extends EventShortProjection> List<T> findAll(List<Long> ids, List<Long> users, List<EventStatus> states,
+                                                            String text, List<Long> categories, Boolean paid,
+                                                            LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                            Boolean onlyAvailable, SortVariant sort, Pageable pageable,
+                                                            Boolean detailed, List<Long> locationIds, List<String> areas) {
         QEvent event = QEvent.event;
         QEventRequest request = QEventRequest.eventRequest;
         QUser user = QUser.user;
         QCategory category = QCategory.category;
+        QLocation location = QLocation.location;
 
         List<BooleanExpression> conditions = new ArrayList<>();
         conditions.add(Expressions.asBoolean(true).isTrue());
 
+        if (ids != null && !ids.isEmpty()) {
+            conditions.add(event.id.in(ids));
+        }
         if (users != null && !users.isEmpty()) {
             conditions.add(event.initiator.id.in(users));
         }
@@ -79,6 +92,14 @@ public class CustomizedEventRepositoryImpl implements CustomizedEventRepository 
             conditions.add(event.participantLimit.eq(0)
                     .or(request.id.count().lt(event.participantLimit)));
         }
+        if (locationIds != null && !locationIds.isEmpty()) {
+            conditions.add(makeLocationIdsCondition(locationIds, location, event));
+        }
+        if (areas != null && !areas.isEmpty()) {
+            MultiPolygon<G2D> polygons = new MultiPolygon<>(areas.stream()
+                    .map(area -> (Polygon<G2D>) Wkt.fromWkt(area, WGS84)).toArray(Polygon[]::new));
+            conditions.add(event.location.within(polygons));
+        }
 
         BooleanExpression finalCondition = conditions.stream()
                 .reduce(BooleanExpression::and)
@@ -102,6 +123,7 @@ public class CustomizedEventRepositoryImpl implements CustomizedEventRepository 
                     event.description,
                     event.participantLimit,
                     event.requestModeration,
+                    event.creationDate,
                     event.location,
                     event.publicationDate,
                     event.status);
@@ -132,5 +154,16 @@ public class CustomizedEventRepositoryImpl implements CustomizedEventRepository 
                         event.id.asc());
 
         return (List<T>) query.fetch();
+    }
+
+    private BooleanExpression makeLocationIdsCondition(List<Long> locationIds, QLocation location, QEvent event) {
+        Expression<?> template = ExpressionUtils.template(MultiPolygon.class,
+                "geomunion({0})", location.area);
+
+        Expression<?> multipolygon = queryFactory
+                .selectFrom(location)
+                .where(location.id.in(locationIds))
+                .select(template);
+        return event.location.within(multipolygon);
     }
 }
