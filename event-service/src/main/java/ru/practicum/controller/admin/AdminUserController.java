@@ -3,6 +3,9 @@ package ru.practicum.controller.admin;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -28,6 +31,7 @@ import ru.practicum.service.user.UserService;
 @RequestMapping("/admin/users")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Admin: Пользователи", description = "API для работы с пользователями")
 public class AdminUserController {
     private final UserService userService;
 
@@ -35,20 +39,28 @@ public class AdminUserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Создание нового пользователя")
     public UserView create(@RequestBody @Valid UserCreateRequest request) {
         return userConverter.convert(userService.create(userConverter.convert(request)));
     }
 
     @GetMapping
-    public List<UserView> getAll(@RequestParam(required = false) List<Long> ids,
-                                 @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                 @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+    @Operation(summary = "Получение списка пользователей")
+    public List<UserView> getAll(
+            @RequestParam(required = false)
+            @Parameter(description = "Список идентификаторов пользователей") List<Long> ids,
+            @RequestParam(defaultValue = "0") @Min(0)
+            @Parameter(description = "Количество элементов в наборе, которые нужно пропустить") Integer from,
+            @RequestParam(defaultValue = "10") @Min(1)
+            @Parameter(description = "Количество элементов в наборе") Integer size) {
         return userConverter.convert(userService.getAll(ids, from, size));
     }
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long userId) {
+    @Operation(summary = "Удаление пользователя")
+    public void delete(@PathVariable @Parameter(description = "Идентификатор пользователя", required = true)
+                           Long userId) {
         userService.delete(userId);
     }
 }

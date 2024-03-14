@@ -109,15 +109,16 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
-        return eventRepository.findAll(users, states, null, categories, null, rangeStart, rangeEnd,
-                null, SortVariant.EVENT_DATE, pageRequest, true);
+        return eventRepository.findAll(null, users, states, null, categories, null, rangeStart, rangeEnd,
+                null, SortVariant.EVENT_DATE, pageRequest, true, null, null);
     }
 
     @Override
     public List<EventShortProjection> getAllPublic(String text, List<Long> categories, Boolean paid,
                                                    LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                    Boolean onlyAvailable, SortVariant sort,
-                                                   Integer from, Integer size) {
+                                                   Integer from, Integer size, List<Long> locationIds,
+                                                   List<String> areas) {
         log.info("Получение списка событий");
         if (categories != null && categoryRepository.findAllByIdIn(categories).isEmpty()) {
             throw new ValidationException("Запрос составлен некорректно");
@@ -125,17 +126,23 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
-        return eventRepository.findAll(null, List.of(EventStatus.PUBLISHED), text, categories, paid,
+        return eventRepository.findAll(null, null, List.of(EventStatus.PUBLISHED), text, categories, paid,
                 rangeStart == null ? LocalDateTime.now() : rangeStart, rangeEnd, onlyAvailable, sort, pageRequest,
-                false);
+                false, locationIds, areas);
     }
 
     @Override
     public EventFullProjection getById(Long id) {
         log.info("Получение события по id = {}", id);
 
-        return eventRepository.findByIdWithRequestCount(id)
-                .orElseThrow(() -> new EntityNotFoundException("Не найдено событие по id = " + id));
+        List<EventFullProjection> all = eventRepository.findAll(List.of(id), null, List.of(EventStatus.PUBLISHED),
+                null, null, null, null, null, null,
+                SortVariant.EVENT_DATE, PageRequest.of(0, 1), true, null, null);
+        if (all.isEmpty()) {
+            throw new EntityNotFoundException("Не найдено событие по id = " + id);
+        }
+
+        return all.get(0);
     }
 
     @Override
@@ -144,17 +151,23 @@ public class EventServiceImpl implements EventService {
 
         PageRequest pageRequest = PageRequest.of(from / size, size);
 
-        return eventRepository.findAll(List.of(userId), null, null, null, null,
-                null, null, null, SortVariant.EVENT_DATE, pageRequest, false);
+        return eventRepository.findAll(null, List.of(userId), null, null, null, null,
+                null, null, null, SortVariant.EVENT_DATE, pageRequest, false,
+                null, null);
     }
 
     @Override
     public EventFullProjection getByInitiatorIdAndId(Long userId, Long id) {
         log.info("Получение события пользователя с id = {} по id = {}", userId, id);
 
-        return eventRepository.findByInitiatorIdAndIdWithRequestCount(userId, id)
-                .orElseThrow(() -> new EntityNotFoundException("Не найдено событие пользователя с id = " + userId
-                        + " по id = " + id));
+        List<EventFullProjection> all = eventRepository.findAll(List.of(id), List.of(userId), null, null,
+                null, null, null, null, null, SortVariant.EVENT_DATE,
+                PageRequest.of(0, 1), true, null, null);
+        if (all.isEmpty()) {
+            throw new EntityNotFoundException("Не найдено событие пользователя с id = " + userId
+                    + " по id = " + id);
+        }
+        return all.get(0);
     }
 
     @Override
