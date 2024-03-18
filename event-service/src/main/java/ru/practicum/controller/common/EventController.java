@@ -2,8 +2,12 @@ package ru.practicum.controller.common;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Min;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -31,6 +35,7 @@ import ru.practicum.service.event.EventService;
 @RequestMapping("/events")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Public: События", description = "Публичный API для работы с событиями")
 public class EventController {
     private static final String SERVICE_NAME = "event-service";
 
@@ -44,25 +49,43 @@ public class EventController {
     private String statServerUrl;
 
     @GetMapping
-    public List<EventShortView> getAll(@RequestParam(required = false) String text,
-                                       @RequestParam(required = false) List<Long> categories,
-                                       @RequestParam(required = false) Boolean paid,
-                                       @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                           LocalDateTime rangeStart,
-                                       @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                           LocalDateTime rangeEnd,
-                                       @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-                                       @RequestParam(defaultValue = "EVENT_DATE") SortVariant sort,
-                                       @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                       @RequestParam(defaultValue = "10") @Min(1) Integer size,
-                                       HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Получение списка событий")
+    public List<EventShortView> getAll(
+            @RequestParam(required = false) @Parameter(description = "Строка поиска в аннотации/описании") String text,
+            @RequestParam(required = false) @Parameter(description = "Список id категорий") List<Long> categories,
+            @RequestParam(required = false) @Parameter(description = "Признак платного события") Boolean paid,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+            @Parameter(description = "Дата события с") LocalDateTime rangeStart,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+            @Parameter(description = "Дата события по") LocalDateTime rangeEnd,
+            @RequestParam(defaultValue = "false")
+            @Parameter(description = "Признак неисчерпанного лимита на участие") Boolean onlyAvailable,
+            @RequestParam(required = false) @Parameter(description = "Список id локаций") List<Long> locations,
+            @RequestParam(required = false) @Parameter(description = "Список областей") List<String> areas,
+            @RequestParam(defaultValue = "EVENT_DATE") @Parameter(description = "Сортировка") SortVariant sort,
+            @RequestParam(defaultValue = "0") @Min(0)
+            @Parameter(description = "Количество элементов в наборе, которые нужно пропустить") Integer from,
+            @RequestParam(defaultValue = "10") @Min(1)
+            @Parameter(description = "Количество элементов в наборе") Integer size,
+            HttpServletRequest httpServletRequest) {
         addHit(httpServletRequest);
+        List<String> decodedAreas;
+        if (areas != null) {
+            decodedAreas = areas.stream()
+                    .map(area -> area.replaceAll("comma", ","))
+                    .collect(Collectors.toList());
+        } else {
+            decodedAreas = null;
+        }
         return eventConverter.convert(eventService.getAllPublic(text, categories, paid, rangeStart, rangeEnd,
-                onlyAvailable, sort, from, size));
+                onlyAvailable, sort, from, size, locations, decodedAreas));
     }
 
     @GetMapping("/{id}")
-    public EventFullView getById(@PathVariable Long id, HttpServletRequest httpServletRequest) {
+    @Operation(summary = "Получение события по идентификатору")
+    public EventFullView getById(
+            @PathVariable @Parameter(description = "Идентификатор события", required = true) Long id,
+            HttpServletRequest httpServletRequest) {
         addHit(httpServletRequest);
         StatClient statClient = new StatClient(statServerUrl, restTemplateBuilder);
 

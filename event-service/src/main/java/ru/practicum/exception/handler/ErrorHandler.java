@@ -6,6 +6,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
+import org.geolatte.geom.codec.WkbDecodeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -67,6 +68,13 @@ public class ErrorHandler {
     public ErrorResponse handleMissingServletRequestParameterException(final MissingServletRequestParameterException
                                                                                    exception) {
         log.error("Ошибка валидации. {}", exception.getMessage());
+        return new ErrorResponse(exception.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleWkbDecodeException(final WkbDecodeException exception) {
+        log.error("Ошибка преобразования геометрической фигуры. {}", exception.getMessage());
         return new ErrorResponse(exception.getMessage());
     }
 
