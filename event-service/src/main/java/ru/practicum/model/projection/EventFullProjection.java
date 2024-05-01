@@ -1,12 +1,13 @@
 package ru.practicum.model.projection;
 
-import java.awt.geom.Point2D;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.geolatte.geom.G2D;
+import org.geolatte.geom.Point;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.model.EventStatus;
@@ -24,7 +25,7 @@ public class EventFullProjection extends EventShortProjection {
     public EventFullProjection(Long id, User initiator, String annotation, Category category, LocalDateTime eventDate,
                                Boolean paid, String title, Integer confirmedRequests, Integer views, String description,
                                Integer participantLimit, Boolean requestModeration, LocalDateTime creationDate,
-                               Point2D.Double location, LocalDateTime publicationDate, EventStatus status) {
+                               Point<G2D> location, LocalDateTime publicationDate, EventStatus status) {
         super(id, initiator, annotation, category, eventDate, paid, title, confirmedRequests, views);
         this.description = description;
         this.participantLimit = participantLimit;
@@ -43,7 +44,7 @@ public class EventFullProjection extends EventShortProjection {
 
     LocalDateTime creationDate;
 
-    Point2D.Double location;
+    Point<G2D> location;
 
     LocalDateTime publicationDate;
 

@@ -3,6 +3,9 @@ package ru.practicum.controller.user;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -35,6 +38,7 @@ import ru.practicum.service.request.EventRequestService;
 @RequestMapping("/users/{userId}/events")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Private: События", description = "Закрытый API для работы с событиями")
 public class UserEventController {
     private final EventService eventService;
 
@@ -46,38 +50,55 @@ public class UserEventController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public EventFullView create(@PathVariable Long userId, @RequestBody @Valid EventCreateRequest request) {
+    @Operation(summary = "Создание нового события")
+    public EventFullView create(
+            @PathVariable @Parameter(description = "Идентификатор инициатора", required = true) Long userId,
+            @RequestBody @Valid EventCreateRequest request) {
         return eventConverter.convert(eventService.create(userId, eventConverter.convert(request)));
     }
 
     @PatchMapping("/{eventId}")
-    public EventFullView patch(@PathVariable Long userId, @PathVariable Long eventId,
-                               @RequestBody @Valid EventPatchUserRequest request) {
+    @Operation(summary = "Редактирование события, добавленного текущим пользователем")
+    public EventFullView patch(
+            @PathVariable @Parameter(description = "Идентификатор инициатора", required = true) Long userId,
+            @PathVariable @Parameter(description = "Идентификатор события", required = true) Long eventId,
+            @RequestBody @Valid EventPatchUserRequest request) {
         return eventConverter.convert(eventService.patch(userId, eventId, eventConverter.convert(request)));
     }
 
     @GetMapping
-    public List<EventShortView> getByInitiatorId(@PathVariable Long userId,
-                                                 @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                                 @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+    @Operation(summary = "Получение событий, добавленных текущим пользователем")
+    public List<EventShortView> getByInitiatorId(
+            @PathVariable @Parameter(description = "Идентификатор инициатора", required = true) Long userId,
+            @RequestParam(defaultValue = "0") @Min(0)
+            @Parameter(description = "Количество элементов в наборе, которые нужно пропустить") Integer from,
+            @RequestParam(defaultValue = "10") @Min(1)
+            @Parameter(description = "Количество элементов в наборе") Integer size) {
         return eventConverter.convert(eventService.getByInitiatorId(userId, from, size));
     }
 
     @GetMapping("/{eventId}")
-    public EventFullView getByInitiatorIdAndId(@PathVariable Long userId, @PathVariable Long eventId) {
+    @Operation(summary = "Получение полной информации о событии, добавленном текущим пользователем")
+    public EventFullView getByInitiatorIdAndId(
+            @PathVariable @Parameter(description = "Идентификатор инициатора", required = true) Long userId,
+            @PathVariable @Parameter(description = "Идентификатор события", required = true) Long eventId) {
         return eventConverter.convert(eventService.getByInitiatorIdAndId(userId, eventId));
     }
 
     @GetMapping("/{eventId}/requests")
-    public List<EventRequestView> getRequestsByInitiatorIdAndEventId(@PathVariable Long userId,
-                                                                     @PathVariable Long eventId) {
+    @Operation(summary = "Получение информации о заявках на участие в событии текущего пользователя")
+    public List<EventRequestView> getRequestsByInitiatorIdAndEventId(
+            @PathVariable @Parameter(description = "Идентификатор инициатора", required = true) Long userId,
+            @PathVariable @Parameter(description = "Идентификатор события", required = true) Long eventId) {
         return eventRequestConverter.convert(eventRequestService.getByInitiatorIdAndEventId(userId, eventId));
     }
 
     @PatchMapping("/{eventId}/requests")
-    public EventRequestPatchView patch(@PathVariable Long userId,
-                                       @PathVariable Long eventId,
-                                       @RequestBody @Valid EventRequestPatchRequest request) {
+    @Operation(summary = "Изменение статуса заявок на участие в событии текущего пользователя")
+    public EventRequestPatchView patch(
+            @PathVariable @Parameter(description = "Идентификатор инициатора", required = true) Long userId,
+            @PathVariable @Parameter(description = "Идентификатор события", required = true) Long eventId,
+            @RequestBody @Valid EventRequestPatchRequest request) {
         return eventRequestConverter.convert(eventRequestService.patch(userId, eventId,
                 eventRequestConverter.convertRequestLoList(request)));
     }

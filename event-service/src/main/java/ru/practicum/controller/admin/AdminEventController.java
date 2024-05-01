@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
@@ -28,27 +31,35 @@ import ru.practicum.service.event.EventService;
 @RequestMapping("/admin/events")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Admin: События", description = "API для работы с событиями")
 public class AdminEventController {
     private final EventService eventService;
 
     private final EventConverter eventConverter;
 
     @GetMapping
-    public List<EventFullView> getAll(@RequestParam(required = false) List<Long> users,
-                                       @RequestParam(required = false) List<EventStatus> states,
-                                       @RequestParam(required = false) List<Long> categories,
-                                       @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                           LocalDateTime rangeStart,
-                                       @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                           LocalDateTime rangeEnd,
-                                       @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                       @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+    @Operation(summary = "Получение списка событий")
+    public List<EventFullView> getAll(
+            @RequestParam(required = false) @Parameter(description = "Список id инициаторов") List<Long> users,
+            @RequestParam(required = false) @Parameter(description = "Список статусов") List<EventStatus> states,
+            @RequestParam(required = false) @Parameter(description = "Список id категорий") List<Long> categories,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+            @Parameter(description = "Дата события с") LocalDateTime rangeStart,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+            @Parameter(description = "Дата события по") LocalDateTime rangeEnd,
+            @RequestParam(defaultValue = "0") @Min(0)
+            @Parameter(description = "Количество элементов в наборе, которые нужно пропустить") Integer from,
+            @RequestParam(defaultValue = "10") @Min(1)
+            @Parameter(description = "Количество элементов в наборе") Integer size) {
         return eventConverter.convertFull(eventService.getAllAdmin(users, states, categories, rangeStart, rangeEnd,
                 from, size));
     }
 
     @PatchMapping("/{eventId}")
-    public EventFullView patch(@PathVariable Long eventId, @RequestBody @Valid EventPatchAdminRequest request) {
+    @Operation(summary = "Редактирование события")
+    public EventFullView patch(
+            @PathVariable @Parameter(description = "Идентификатор события", required = true) Long eventId,
+            @RequestBody @Valid EventPatchAdminRequest request) {
         return eventConverter.convert(eventService.patch(eventId, eventConverter.convert(request)));
     }
 }

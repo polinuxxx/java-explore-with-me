@@ -11,8 +11,9 @@ import ru.practicum.model.projection.EventShortProjection;
  * Репозиторий для запросов по событиям с QueryDSL.
  */
 public interface CustomizedEventRepository {
-    <T extends EventShortProjection> List<T> findAll(List<Long> users, List<EventStatus> states, String text,
-                                       List<Long> categories, Boolean paid, LocalDateTime rangeStart,
-                                       LocalDateTime rangeEnd, Boolean onlyAvailable, SortVariant sort,
-                                       Pageable pageable, Boolean detailed);
+    <T extends EventShortProjection> List<T> findAll(List<Long> ids, List<Long> users, List<EventStatus> states, String text,
+                                                     List<Long> categories, Boolean paid, LocalDateTime rangeStart,
+                                                     LocalDateTime rangeEnd, Boolean onlyAvailable, SortVariant sort,
+                                                     Pageable pageable, Boolean detailed, List<Long> locationIds,
+                                                     List<String> areas);
 }
